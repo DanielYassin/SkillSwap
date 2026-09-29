@@ -1,0 +1,17 @@
+{
+  "name": "skillswap",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "pnpm@10.33.3",
+  "scripts": {
+    "typecheck": "pnpm -r --if-present run typecheck",
+    "lint": "pnpm -r --if-present run lint",
+    "test": "pnpm -r --if-present run test",
+    "mobile": "pnpm --filter @skillswap/mobile start",
+    "mobile:typecheck": "pnpm --filter @skillswap/mobile typecheck",
+    "mobile:lint": "pnpm --filter @skillswap/mobile lint"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
