@@ -1,10 +1,21 @@
+import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Avatar, Button, Card, Screen } from '@/components';
 import { useSession } from '@/lib/session';
 import { theme } from '@/theme';
 
 export default function ProfileScreen() {
-  const { user, clearSession } = useSession();
+  const { user, signOut } = useSession();
+  const [signingOut, setSigningOut] = useState(false);
+
+  const onSignOut = async () => {
+    setSigningOut(true);
+    try {
+      await signOut();
+    } finally {
+      setSigningOut(false);
+    }
+  };
 
   return (
     <Screen>
@@ -15,11 +26,18 @@ export default function ProfileScreen() {
       </View>
       <Card style={styles.card}>
         <Text style={styles.cardBody}>
-          Profile editing is out of scope for the mobile foundation. Sign out clears the mock
-          session and returns you to auth.
+          Profile editing is out of scope for the mobile foundation. Sign out calls the API
+          logout route and clears the in-memory session so the auth gate returns you to sign-in.
         </Text>
       </Card>
-      <Button label="Sign out" variant="secondary" onPress={clearSession} />
+      <Button
+        label="Sign out"
+        variant="secondary"
+        loading={signingOut}
+        onPress={() => {
+          void onSignOut();
+        }}
+      />
     </Screen>
   );
 }

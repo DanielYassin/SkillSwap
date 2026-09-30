@@ -1,23 +1,15 @@
 import 'react-native-gesture-handler';
 import { useEffect, type ReactNode } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SessionProvider, useSession } from '@/lib/session';
-import { configureApiSessionHooks } from '@/services/api';
 import { theme } from '@/theme';
 
 function AuthGate({ children }: { children: ReactNode }) {
-  const { isLoggedIn, isHydrated, clearSession } = useSession();
+  const { isLoggedIn, isHydrated } = useSession();
   const segments = useSegments();
   const router = useRouter();
-
-  useEffect(() => {
-    configureApiSessionHooks({
-      onUnauthorized: () => {
-        clearSession();
-      },
-    });
-  }, [clearSession]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -30,6 +22,14 @@ function AuthGate({ children }: { children: ReactNode }) {
       router.replace('/(app)/dashboard');
     }
   }, [isLoggedIn, isHydrated, segments, router]);
+
+  if (!isHydrated) {
+    return (
+      <View style={styles.boot}>
+        <ActivityIndicator color={theme.colors.brand.teal} size="large" />
+      </View>
+    );
+  }
 
   return children;
 }
@@ -52,3 +52,12 @@ export default function RootLayout() {
     </SessionProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  boot: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.surface.canvas,
+  },
+});

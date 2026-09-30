@@ -2,34 +2,45 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Button, Screen, TextInput } from '@/components';
 import { useSession } from '@/lib/session';
+import { ApiError } from '@/services/api';
 import { theme } from '@/theme';
 
-/** Placeholder register — mock session only until cookie auth is wired. */
+/** Cookie-session registration — same session cookie contract as login. */
 export default function RegisterScreen() {
-  const { mockSignIn } = useSession();
+  const { signUp } = useSession();
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const onSubmit = () => {
+  const onSubmit = async () => {
+    setError(null);
     setSubmitting(true);
-    setTimeout(() => {
-      mockSignIn({
-        id: 'mock-user-new',
-        email: email || 'new@skillswap.local',
-        displayName: displayName || 'New Member',
-        avatarUrl: null,
+    try {
+      await signUp({
+        email: email.trim(),
+        password,
+        displayName: displayName.trim(),
       });
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message);
+      } else {
+        setError('Unable to reach the API. Check EXPO_PUBLIC_API_URL and try again.');
+      }
+    } finally {
       setSubmitting(false);
-    }, 250);
+    }
   };
 
   return (
     <Screen>
       <View style={styles.form}>
         <Text style={styles.title}>Create account</Text>
-        <Text style={styles.subtitle}>Placeholder screen — no network calls yet.</Text>
+        <Text style={styles.subtitle}>
+          Creates an account and establishes the API session cookie.
+        </Text>
         <TextInput
           label="Display name"
           value={displayName}
@@ -54,7 +65,15 @@ export default function RegisterScreen() {
           onChangeText={setPassword}
           placeholder="••••••••"
         />
-        <Button label="Create account" onPress={onSubmit} loading={submitting} />
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+        <Button
+          label="Create account"
+          onPress={() => {
+            void onSubmit();
+          }}
+          loading={submitting}
+          disabled={!displayName.trim() || !email.trim() || !password}
+        />
       </View>
     </Screen>
   );
@@ -74,5 +93,9 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.size.sm,
     color: theme.colors.text.secondary,
     marginTop: -theme.spacing.sm,
+  },
+  error: {
+    fontSize: theme.typography.size.sm,
+    color: theme.colors.state.danger,
   },
 });

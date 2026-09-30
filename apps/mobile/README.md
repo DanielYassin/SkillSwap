@@ -24,9 +24,15 @@ Host awareness for local API:
 
 - iOS Simulator → `127.0.0.1`
 - Android Emulator → `10.0.2.2`
-- Physical device → your machine LAN IP
+- Physical device → set `EXPO_PUBLIC_API_URL` to a reachable host (LAN or tunnel). Do not commit a permanent LAN IP.
 
-`src/lib/env.ts` resolves a platform-aware default when `EXPO_PUBLIC_API_URL` is unset in local mode.
+`src/lib/env.ts` / `env-helpers.ts` resolve a platform-aware default when `EXPO_PUBLIC_API_URL` is unset in local mode.
+
+## Auth (SS-26)
+
+- Typed client always uses `credentials: 'include'` (httpOnly cookie session — same model as web).
+- Boot: `GET /auth/me` hydrates session; login/register set the cookie; logout + 401 clear session → auth gate.
+- **No** JWT / Bearer / AsyncStorage / SecureStore auth path.
 
 ## Structure
 

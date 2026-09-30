@@ -1,13 +1,18 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import {
-  defaultLocalApiUrl,
   parseAppEnv,
+  resolveApiUrl,
   type AppEnv,
 } from './env-helpers';
 
 export type { AppEnv } from './env-helpers';
-export { defaultLocalApiUrl, parseAppEnv, resolveLocalApiHost } from './env-helpers';
+export {
+  defaultLocalApiUrl,
+  parseAppEnv,
+  resolveApiUrl,
+  resolveLocalApiHost,
+} from './env-helpers';
 
 export type MobileEnv = {
   appEnv: AppEnv;
@@ -34,18 +39,11 @@ function readPublic(name: 'EXPO_PUBLIC_API_URL' | 'EXPO_PUBLIC_APP_ENV'): string
 
 export function getMobileEnv(): MobileEnv {
   const appEnv = parseAppEnv(readPublic('EXPO_PUBLIC_APP_ENV'));
-  const configured = readPublic('EXPO_PUBLIC_API_URL');
-
-  let apiUrl: string;
-  if (configured) {
-    apiUrl = configured.replace(/\/$/, '');
-  } else if (appEnv === 'local') {
-    apiUrl = defaultLocalApiUrl(Platform.OS);
-  } else {
-    throw new Error(
-      `EXPO_PUBLIC_API_URL is required when EXPO_PUBLIC_APP_ENV=${appEnv}`,
-    );
-  }
+  const apiUrl = resolveApiUrl({
+    appEnv,
+    configuredUrl: readPublic('EXPO_PUBLIC_API_URL'),
+    platformOs: Platform.OS,
+  });
 
   return {
     appEnv,

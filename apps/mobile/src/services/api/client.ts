@@ -1,5 +1,28 @@
-import { env } from '@/lib/env';
+import { parseAppEnv, resolveApiUrl } from '../../lib/env-helpers';
 import { ApiError, parseApiError } from './errors';
+
+function readPlatformOs(): string {
+  // Lazy require so Node unit tests that set EXPO_PUBLIC_API_URL never load RN.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { Platform } = require('react-native') as typeof import('react-native');
+  return Platform.OS;
+}
+
+/** Same origin resolution as `getMobileEnv().apiUrl`. */
+function resolveBaseUrl(): string {
+  const configured = process.env.EXPO_PUBLIC_API_URL;
+  if (typeof configured === 'string' && configured.trim().length > 0) {
+    return resolveApiUrl({
+      appEnv: parseAppEnv(process.env.EXPO_PUBLIC_APP_ENV),
+      configuredUrl: configured,
+      platformOs: 'ios', // unused when configured
+    });
+  }
+  return resolveApiUrl({
+    appEnv: parseAppEnv(process.env.EXPO_PUBLIC_APP_ENV),
+    platformOs: readPlatformOs(),
+  });
+}
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
@@ -34,7 +57,7 @@ function buildUrl(path: string): string {
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return path;
   }
-  const base = env.apiUrl.replace(/\/$/, '');
+  const base = resolveBaseUrl();
   const normalized = path.startsWith('/') ? path : `/${path}`;
   return `${base}${normalized}`;
 }

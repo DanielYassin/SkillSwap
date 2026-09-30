@@ -2,37 +2,43 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Button, Screen, TextInput } from '@/components';
 import { useSession } from '@/lib/session';
+import { ApiError } from '@/services/api';
 import { theme } from '@/theme';
 
 /**
- * Placeholder login. Mock session only — real cookie login lands after SS-26
- * backend pairing. Do not add a parallel token/AsyncStorage auth path.
+ * Cookie-session login. Auth source is the API httpOnly session cookie
+ * (`credentials: 'include'`). Do not add Bearer/JWT or AsyncStorage tokens.
  */
 export default function LoginScreen() {
-  const { mockSignIn } = useSession();
+  const { signIn } = useSession();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const onSubmit = () => {
+  const onSubmit = async () => {
+    setError(null);
     setSubmitting(true);
-    // Simulated latency for loading-state coverage; replace with api.post('/auth/login').
-    setTimeout(() => {
-      mockSignIn({
-        id: 'mock-user-1',
-        email: email || 'demo@skillswap.local',
-        displayName: 'Demo Learner',
-        avatarUrl: null,
-      });
+    try {
+      await signIn({ email: email.trim(), password });
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message);
+      } else {
+        setError('Unable to reach the API. Check EXPO_PUBLIC_API_URL and try again.');
+      }
+    } finally {
       setSubmitting(false);
-    }, 250);
+    }
   };
 
   return (
     <Screen>
       <View style={styles.form}>
         <Text style={styles.title}>Sign in</Text>
-        <Text style={styles.subtitle}>Placeholder screen — session is mocked locally.</Text>
+        <Text style={styles.subtitle}>
+          Uses the same httpOnly cookie session as web. No local token storage.
+        </Text>
         <TextInput
           label="Email"
           autoCapitalize="none"
@@ -50,7 +56,15 @@ export default function LoginScreen() {
           onChangeText={setPassword}
           placeholder="••••••••"
         />
-        <Button label="Continue" onPress={onSubmit} loading={submitting} />
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+        <Button
+          label="Continue"
+          onPress={() => {
+            void onSubmit();
+          }}
+          loading={submitting}
+          disabled={!email.trim() || !password}
+        />
       </View>
     </Screen>
   );
@@ -70,5 +84,9 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.size.sm,
     color: theme.colors.text.secondary,
     marginTop: -theme.spacing.sm,
+  },
+  error: {
+    fontSize: theme.typography.size.sm,
+    color: theme.colors.state.danger,
   },
 });

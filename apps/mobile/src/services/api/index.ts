@@ -7,3 +7,10 @@ export {
   type HttpMethod,
   type SessionHooks,
 } from './client';
+export {
+  AUTH_PATHS,
+  fetchSessionUser,
+  login,
+  logout,
+  register,
+} from './auth';
