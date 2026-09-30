@@ -1,12 +1,12 @@
 import 'react-native-gesture-handler';
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SessionProvider, useSession } from '@/lib/session';
 import { configureApiSessionHooks } from '@/services/api';
 import { theme } from '@/theme';
 
-function AuthGate({ children }: { children: React.ReactNode }) {
+function AuthGate({ children }: { children: ReactNode }) {
   const { isLoggedIn, isHydrated, clearSession } = useSession();
   const segments = useSegments();
   const router = useRouter();
