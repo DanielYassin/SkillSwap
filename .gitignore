@@ -17,3 +17,4 @@ apps/mobile/android/
 apps/mobile/dist-*/
 apps/mobile/dist/
 agent-tools/
+*.pem
